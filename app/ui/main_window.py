@@ -9,6 +9,7 @@ from app.ui.result_widget import ResultWidget
 from app.core.analyzer import Analyzer
 from app.core.optimizer import ImageOptimizer
 from app.utils.export import Exporter
+from app.ui.cropper import InteractiveCropper
 
 class MainWindow(QMainWindow):
     def __init__(self, config):
@@ -56,9 +57,18 @@ class MainWindow(QMainWindow):
         self.review_container = QWidget()
         self.review_layout = QHBoxLayout(self.review_container)
         
+        # Left Side: Stack (Preview Label OR Cropper)
+        self.review_stack = QStackedWidget()
+        self.review_layout.addWidget(self.review_stack, 1)
+        
+        # Page 0: Preview Label
         self.preview_label = QLabel("Preview")
         self.preview_label.setAlignment(Qt.AlignCenter)
-        self.review_layout.addWidget(self.preview_label, 1)
+        self.review_stack.addWidget(self.preview_label)
+        
+        # Page 1: Cropper
+        self.cropper = InteractiveCropper()
+        self.review_stack.addWidget(self.cropper)
         
         self.result_widget = ResultWidget()
         self.result_widget.btn_export.clicked.connect(self.export_results)
@@ -68,6 +78,9 @@ class MainWindow(QMainWindow):
         self.result_widget.btn_darken.clicked.connect(lambda: self.adjust_brightness(0.9))
         self.result_widget.btn_fix_bg.clicked.connect(self.optimize_background)
         self.result_widget.btn_undo.clicked.connect(self.reset_image)
+        
+        # Connect Crop Button
+        self.result_widget.btn_crop.clicked.connect(self.toggle_crop_mode)
         
         self.review_layout.addWidget(self.result_widget, 1)
         
