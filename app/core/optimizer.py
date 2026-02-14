@@ -45,13 +45,11 @@ class ImageOptimizer:
         
         # 1. Define "Sure Background" (Edges)
         # Top corners are usually background
-        margin_w = int(w * 0.1)
-        margin_h = int(h * 0.1)
+        # REDUCED MARGIN to prevent cutting voluminous hair
+        margin_w = int(w * 0.05) 
+        margin_h = int(h * 0.05)
         cv2.rectangle(mask, (0, 0), (margin_w, margin_h), cv2.GC_BGD, -1) # Top-Left
         cv2.rectangle(mask, (w - margin_w, 0), (w, margin_h), cv2.GC_BGD, -1) # Top-Right
-        
-        # Top strip (exclude head area if face is high?)
-        # Let's trust corners more.
         
         # 2. Define "Sure Foreground" (Face)
         box = face.bbox.astype(int)
@@ -61,6 +59,11 @@ class ImageOptimizer:
         face_center = ((x1 + x2) // 2, (y1 + y2) // 2)
         face_size = ((x2 - x1) // 2, (y2 - y1) // 2)
         cv2.ellipse(mask, face_center, face_size, 0, 0, 360, cv2.GC_FGD, -1)
+        
+        # Expand "Probable Foreground" for Hair above head
+        # Assume hair can be up to 1/2 face height above face box
+        hair_top = max(0, y1 - int((y2-y1)*0.5))
+        cv2.rectangle(mask, (x1, hair_top), (x2, y1), cv2.GC_PR_FGD, -1)
         
         # 3. Define "Probable Foreground" (Torso/Body)
         # We assume the body is below the face approx width of face * 1.5
@@ -97,6 +100,12 @@ class ImageOptimizer:
         # 5. Create Final Mask
         # Pixels 0 and 2 are background
         mask2 = np.where((mask==2)|(mask==0), 0, 1).astype('uint8')
+        
+        # Post-Process Mask to fill holes (white streaks in hair)
+        # Morphological Close: Dilation followed by Erosion
+        kernel_size = max(3, int(w * 0.005)) # Dynamic kernel size
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        mask2 = cv2.morphologyEx(mask2, cv2.MORPH_CLOSE, kernel)
         
         # 6. Apply White Background
         white_bg = np.ones_like(img, dtype=np.uint8) * 255
