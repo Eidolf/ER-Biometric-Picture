@@ -40,7 +40,11 @@ class BackgroundChecker:
         # Check uniformity
         max_std = np.max(std_dev)
         if max_std > 40: # Threshold for uniformity
-             results['uniformity'] = {'passed': False, 'value': round(max_std, 2), 'msg': "Non-uniform background"}
+             results['uniformity'] = {
+                 'passed': False, 
+                 'value': round(max_std, 2), 
+                 'msg': "Uneven (shadows/texture). Use empty white wall."
+             }
         else:
              results['uniformity'] = {'passed': True, 'value': round(max_std, 2), 'msg': "Uniform"}
 
@@ -48,7 +52,11 @@ class BackgroundChecker:
         # BGR -> Mean should be high
         brightness = np.mean(mean_val)
         if brightness < 150:
-             results['brightness'] = {'passed': False, 'value': round(brightness, 2), 'msg': "Background too dark"}
+             results['brightness'] = {
+                 'passed': False, 
+                 'value': round(brightness, 2), 
+                 'msg': "Too dark. Need better light."
+             }
         else:
              results['brightness'] = {'passed': True, 'value': round(brightness, 2), 'msg': "OK"}
              

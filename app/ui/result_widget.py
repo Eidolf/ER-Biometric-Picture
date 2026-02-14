@@ -48,6 +48,7 @@ class ResultWidget(QWidget):
                     item.setText(1, "PASS" if passed else "FAIL")
                     item.setText(2, str(data.get('value', '')))
                     item.setText(3, data.get('msg', ''))
+                    item.setToolTip(3, data.get('msg', ''))
                     
                     if not passed:
                         item.setForeground(1, Qt.red)
