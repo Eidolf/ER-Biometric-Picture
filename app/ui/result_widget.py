@@ -18,8 +18,16 @@ class ResultWidget(QWidget):
         self.tree.setColumnWidth(1, 80)
         self.layout.addWidget(self.tree)
         
+        # Buttons Layout
+        btn_layout = QHBoxLayout()
+        self.layout.addLayout(btn_layout)
+        
+        self.btn_optimize = QPushButton("✨ Optimize Image")
+        self.btn_optimize.setToolTip("Auto-adjust brightness and remove background artifacts")
+        btn_layout.addWidget(self.btn_optimize)
+        
         self.btn_export = QPushButton("Export Results")
-        self.layout.addWidget(self.btn_export)
+        btn_layout.addWidget(self.btn_export)
 
     def update_results(self, results):
         self.tree.clear()

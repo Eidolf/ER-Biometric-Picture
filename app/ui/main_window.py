@@ -7,6 +7,7 @@ from app.ui.camera_widget import CameraWidget
 from app.ui.overlay_widget import OverlayWidget
 from app.ui.result_widget import ResultWidget
 from app.core.analyzer import Analyzer
+from app.core.optimizer import ImageOptimizer
 from app.utils.export import Exporter
 
 class MainWindow(QMainWindow):
@@ -14,6 +15,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.config = config
         self.analyzer = None # Lazy load or init in background to show UI fast?
+        self.optimizer = ImageOptimizer(config)
         self.exporter = Exporter(config)
         self.current_face = None
         self.current_report = None
@@ -60,6 +62,7 @@ class MainWindow(QMainWindow):
         
         self.result_widget = ResultWidget()
         self.result_widget.btn_export.clicked.connect(self.export_results)
+        self.result_widget.btn_optimize.clicked.connect(self.optimize_current_image)
         self.review_layout.addWidget(self.result_widget, 1)
         
         # Back button
@@ -140,6 +143,39 @@ class MainWindow(QMainWindow):
     def reset_to_camera(self):
         self.stack.setCurrentWidget(self.capture_container)
         self.camera_widget.start_camera()
+
+    def optimize_current_image(self):
+        if self.current_image is None or self.current_face is None:
+            QMessageBox.warning(self, "Error", "No image/face to optimize.")
+            return
+            
+        # Optimization (Brightness/Background)
+        self.current_image = self.optimizer.optimize(self.current_image, self.current_face)
+        
+        # Show Optimized Image
+        self.show_image_in_label(self.current_image, self.preview_label)
+        
+        # Re-Run Analysis
+        if self.analyzer:
+            report, face = self.analyzer.analyze(self.current_image)
+            self.current_face = face
+            self.current_report = report
+            self.result_widget.update_results(report)
+            
+            # Draw Face Box on preview for feedback
+            if face:
+                import cv2
+                box = face.bbox.astype(int)
+                img_copy = self.current_image.copy()
+                cv2.rectangle(img_copy, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+                # Draw landmarks
+                if face.kps is not None:
+                    for p in face.kps:
+                        cv2.circle(img_copy, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
+                        
+                self.show_image_in_label(img_copy, self.preview_label)
+        
+        QMessageBox.information(self, "Optimized", "Image brightness and background adjusted.")
 
     def export_results(self):
         if self.current_image is not None and self.current_report is not None:
