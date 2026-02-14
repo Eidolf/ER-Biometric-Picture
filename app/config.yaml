@@ -1,0 +1,27 @@
+# PassPhotoCheck Configuration
+app:
+  name: "PassPhotoCheck"
+  version: "1.0.0"
+  log_level: "INFO"
+
+biometrics:
+  resolution_dpi: 700 # Increased to meet >895x1150 req (target approx 965x1240)
+  output_width_mm: 35
+  output_height_mm: 45
+  
+  # Based on ICAO / BMI geometry
+  min_face_height_mm: 32
+  max_face_height_mm: 36
+  min_eye_y_from_bottom_mm: 21.8
+  max_eye_y_from_bottom_mm: 29.7
+  
+  # Center deviation (Nose)
+  max_center_deviation_mm: 2.5  # Horizontal offset allowed
+
+thresholds:
+  blur_min_score: 100.0       # Laplacain variance
+  exposure_min_hist: 0.2      # Simple heuristic
+  shadow_max_difference: 30   # Pixel diff
+  neutral_expression_score: 0.7 
+  mouth_open_ratio: 0.1       # Inner lip dist / Outer lip width. > 0.1 implies open.
+  eye_open_ratio: 0.15        # Eye height / width. < 0.15 implies closed/squinting.

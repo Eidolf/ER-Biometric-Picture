@@ -1,0 +1,9 @@
+opencv-python-headless
+numpy
+pyside6
+onnxruntime
+insightface
+pillow
+pyyaml
+pyinstaller
+pytest
