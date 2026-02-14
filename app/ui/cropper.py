@@ -31,7 +31,8 @@ class InteractiveCropper(QWidget):
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         h, w, ch = img_rgb.shape
         bytes_per_line = ch * w
-        self.image = QImage(img_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        # KEY FIX: .copy() to ensure deep copy of data because img_rgb will be garbage collected
+        self.image = QImage(img_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888).copy()
         self.pixmap = QPixmap.fromImage(self.image)
         
         # Reset transform to fit image
