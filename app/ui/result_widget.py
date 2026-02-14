@@ -58,6 +58,12 @@ class ResultWidget(QWidget):
         self.btn_export = QPushButton("Export Results")
         self.btn_export.setStyleSheet("height: 40px; font-weight: bold; font-size: 14px;")
         self.layout.addWidget(self.btn_export)
+        
+        # Crop Button
+        self.btn_crop = QPushButton("✂️ Adjust Crop")
+        self.btn_crop.setCheckable(True)
+        self.btn_crop.setStyleSheet("height: 30px; font-weight: bold; margin-top: 5px;")
+        self.layout.addWidget(self.btn_crop)
 
     def update_results(self, results):
         self.tree.clear()

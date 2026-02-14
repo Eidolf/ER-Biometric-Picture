@@ -142,6 +142,57 @@ class MainWindow(QMainWindow):
                         
                 self.show_image_in_label(img_copy, self.preview_label)
 
+    def toggle_crop_mode(self, checked):
+        if checked:
+            # Enter Crop Mode
+            self.cropper.set_image(self.current_image)
+            self.review_stack.setCurrentWidget(self.cropper)
+            self.result_widget.btn_crop.setText("✅ Apply Crop")
+            
+            # Disable other buttons?
+            self.result_widget.btn_export.setEnabled(False)
+            # self.result_widget.btn_optimize.setEnabled(False) 
+            self.result_widget.btn_fix_bg.setEnabled(False)
+            self.result_widget.btn_darken.setEnabled(False)
+            self.result_widget.btn_brighten.setEnabled(False)
+            self.result_widget.btn_undo.setEnabled(False)
+        else:
+            # Apply Crop
+            self.apply_crop()
+            self.review_stack.setCurrentWidget(self.preview_label)
+            self.result_widget.btn_crop.setText("✂️ Adjust Crop")
+            
+            self.result_widget.btn_export.setEnabled(True)
+            # self.result_widget.btn_optimize.setEnabled(True)
+            self.result_widget.btn_fix_bg.setEnabled(True)
+            self.result_widget.btn_darken.setEnabled(True)
+            self.result_widget.btn_brighten.setEnabled(True)
+            self.result_widget.btn_undo.setEnabled(True)
+
+    def apply_crop(self):
+        # Get crop logic
+        rect = self.cropper.get_current_crop() # QRectF in image coords
+        if rect:
+            x = int(rect.x())
+            y = int(rect.y())
+            w = int(rect.width())
+            h = int(rect.height())
+            
+            if w > 10 and h > 10:
+                import cv2
+                # Warping to handle out-of-bounds seamlessly
+                center = (x + w/2, y + h/2)
+                # We simply want to extract this rectangle.
+                # getRectSubPix is good but expects center.
+                
+                # Let's use getRectSubPix which handles float coords and padding
+                cropped = cv2.getRectSubPix(self.current_image, (w, h), center)
+                
+                self.current_image = cropped
+                
+                # Rerun analysis
+                self.rerun_analysis()
+
     def show_image_in_label(self, img_bgr, label):
         import cv2
         from PySide6.QtGui import QImage, QPixmap
