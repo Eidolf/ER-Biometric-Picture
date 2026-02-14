@@ -62,7 +62,13 @@ class MainWindow(QMainWindow):
         
         self.result_widget = ResultWidget()
         self.result_widget.btn_export.clicked.connect(self.export_results)
-        self.result_widget.btn_optimize.clicked.connect(self.optimize_current_image)
+        
+        # Connect Optimization Buttons
+        self.result_widget.btn_brighten.clicked.connect(lambda: self.adjust_brightness(1.1))
+        self.result_widget.btn_darken.clicked.connect(lambda: self.adjust_brightness(0.9))
+        self.result_widget.btn_fix_bg.clicked.connect(self.optimize_background)
+        self.result_widget.btn_undo.clicked.connect(self.reset_image)
+        
         self.review_layout.addWidget(self.result_widget, 1)
         
         # Back button
@@ -97,6 +103,7 @@ class MainWindow(QMainWindow):
 
     def on_image_captured(self, img_bgr):
         self.current_image = img_bgr
+        self.original_capture = img_bgr.copy() # Store original for undo
         self.stack.setCurrentWidget(self.review_container)
         
         # Show image
@@ -144,38 +151,54 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.capture_container)
         self.camera_widget.start_camera()
 
-    def optimize_current_image(self):
-        if self.current_image is None or self.current_face is None:
-            QMessageBox.warning(self, "Error", "No image/face to optimize.")
-            return
-            
-        # Optimization (Brightness/Background)
-        self.current_image = self.optimizer.optimize(self.current_image, self.current_face)
+    def adjust_brightness(self, factor):
+        if self.current_image is None: return
+        self.current_image = self.optimizer.adjust_brightness(self.current_image, factor)
+        self.rerun_analysis()
         
-        # Show Optimized Image
+    def optimize_background(self):
+        if self.current_image is None or self.current_face is None: return
+        # Background fix logic
+        # We use singleShot to allow UI to breathe or show loading if we had one
+        QTimer.singleShot(50, lambda: self._run_bg_fix())
+
+    def _run_bg_fix(self):
+        self.current_image = self.optimizer.optimize_background(self.current_image, self.current_face)
+        self.rerun_analysis()
+        
+    def reset_image(self):
+        if hasattr(self, 'original_capture') and self.original_capture is not None:
+            self.current_image = self.original_capture.copy()
+            self.rerun_analysis()
+            
+    def rerun_analysis(self):
+        # Show Image
         self.show_image_in_label(self.current_image, self.preview_label)
         
         # Re-Run Analysis
         if self.analyzer:
             report, face = self.analyzer.analyze(self.current_image)
-            self.current_face = face
+            # Only update current_face if we found one, otherwise keep old or strict?
+            # Actually if we adjust brightness, face detection should still work, maybe better.
+            if face:
+                 self.current_face = face
             self.current_report = report
             self.result_widget.update_results(report)
             
             # Draw Face Box on preview for feedback
-            if face:
+            face_to_draw = face if face else self.current_face
+            
+            if face_to_draw:
                 import cv2
-                box = face.bbox.astype(int)
+                box = face_to_draw.bbox.astype(int)
                 img_copy = self.current_image.copy()
                 cv2.rectangle(img_copy, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
                 # Draw landmarks
-                if face.kps is not None:
-                    for p in face.kps:
+                if face_to_draw.kps is not None:
+                    for p in face_to_draw.kps:
                         cv2.circle(img_copy, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
                         
                 self.show_image_in_label(img_copy, self.preview_label)
-        
-        QMessageBox.information(self, "Optimized", "Image brightness and background adjusted.")
 
     def export_results(self):
         if self.current_image is not None and self.current_report is not None:

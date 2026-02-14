@@ -8,27 +8,23 @@ class ImageOptimizer:
 
     def optimize(self, img_bgr, face):
         """
-        Optimize the image:
-        1. Auto-Brightness/Contrast correction.
-        2. Background removal/whitening (using GrabCut initialized by face bbox).
+        Deprecated: Use granular methods.
         """
-        # 1. Brightness / Contrast (CLAHE on LAB Lightness)
-        lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB)
-        l, a, b = cv2.split(lab)
+        return self.optimize_background(img_bgr, face)
+
+    def adjust_brightness(self, img_bgr, factor=1.0):
+        """
+        Adjust brightness/gamma.
+        factor > 1.0: Brighter
+        factor < 1.0: Darker
+        """
+        # Using Gamma correction for nicer results than linear addition
+        # Reasonable range for factor: 0.5 to 1.5
+        invGamma = 1.0 / factor
+        table = np.array([((i / 255.0) ** invGamma) * 255
+                          for i in np.arange(0, 256)]).astype("uint8")
         
-        # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
-        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-        l_opt = clahe.apply(l)
-        
-        # Merge back
-        lab_opt = cv2.merge((l_opt, a, b))
-        img_opt = cv2.cvtColor(lab_opt, cv2.COLOR_LAB2BGR)
-        
-        # 2. Background Optimization (GrabCut)
-        if face:
-            img_opt = self.optimize_background(img_opt, face)
-            
-        return img_opt
+        return cv2.LUT(img_bgr, table)
 
     def optimize_background(self, img, face):
         # Use GrabCut

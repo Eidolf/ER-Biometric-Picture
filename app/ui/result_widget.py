@@ -22,12 +22,42 @@ class ResultWidget(QWidget):
         btn_layout = QHBoxLayout()
         self.layout.addLayout(btn_layout)
         
-        self.btn_optimize = QPushButton("✨ Optimize Image")
-        self.btn_optimize.setToolTip("Auto-adjust brightness and remove background artifacts")
-        btn_layout.addWidget(self.btn_optimize)
+        # Optimization Controls Group
+        self.opt_group = QWidget()
+        opt_layout = QVBoxLayout(self.opt_group)
+        opt_layout.setContentsMargins(0, 0, 0, 0)
         
+        # Label
+        lbl = QLabel("Optimization Tools:")
+        lbl.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        opt_layout.addWidget(lbl)
+        
+        # Brightness
+        bright_layout = QHBoxLayout()
+        self.btn_darken = QPushButton("🌑 - Darker")
+        self.btn_brighten = QPushButton("☀️ + Brighter")
+        bright_layout.addWidget(self.btn_darken)
+        bright_layout.addWidget(self.btn_brighten)
+        opt_layout.addLayout(bright_layout)
+        
+        # Special
+        tools_layout = QHBoxLayout()
+        self.btn_fix_bg = QPushButton("Fix Background")
+        self.btn_undo = QPushButton("↩️ Reset / Undo")
+        
+        tools_layout.addWidget(self.btn_fix_bg)
+        tools_layout.addWidget(self.btn_undo)
+        opt_layout.addLayout(tools_layout)
+        
+        self.layout.addWidget(self.opt_group)
+        
+        # Spacer
+        self.layout.addSpacing(10)
+        
+        # Main Export
         self.btn_export = QPushButton("Export Results")
-        btn_layout.addWidget(self.btn_export)
+        self.btn_export.setStyleSheet("height: 40px; font-weight: bold; font-size: 14px;")
+        self.layout.addWidget(self.btn_export)
 
     def update_results(self, results):
         self.tree.clear()
