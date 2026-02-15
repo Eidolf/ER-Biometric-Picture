@@ -50,19 +50,21 @@ class QualityChecker:
              
         # 4. Illumination / Shadows
         # Split image into left and right halves (approx) to check symmetry
-        h, w = gray.shape
-        left_half = gray[:, :w//2]
-        right_half = gray[:, w//2:]
+        # 1. Calc std dev of background pixels
+        mean, stddev = cv2.meanStdDev(gray, mask=bg_mask_binary)
+        std_val = stddev[0][0]
         
-        mean_l = np.mean(left_half)
-        mean_r = np.mean(right_half)
-        diff = abs(mean_l - mean_r)
+        # Score: 100 - std_val
+        # User reported ~80.39 -> StdDev ~19.6
+        # Slight shadows/gradients cause this.
+        score = max(0, 100 - std_val)
         
-        max_diff = self.thresholds.get('shadow_max_difference', 30)
+        threshold = self.config.get('thresholds', {}).get('uniformity_min_score', 75.0)
         
-        if diff > max_diff:
-             results['illumination'] = {'passed': False, 'value': f"Diff {diff:.1f}", 'msg': "Uneven lighting/Shadows"}
+        if score >= threshold:
+            results['uniformity'] = {'passed': True, 'value': f"{score:.1f}", 'msg': "Uniform"}
         else:
-             results['illumination'] = {'passed': True, 'value': f"Diff {diff:.1f}", 'msg': "Even lighting"}
+            results['uniformity'] = {'passed': False, 'value': f"{score:.1f}", 
+                                     'msg': f"Uneven background (StdDev: {std_val:.1f})"}
 
         return results
