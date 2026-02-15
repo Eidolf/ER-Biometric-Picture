@@ -99,7 +99,6 @@ class InteractiveCropper(QWidget):
         self.crop_box = QRectF(x, y, box_w, box_h)
         
         # Draw Dimmed Surroundings
-        path = QPainter(self).window() # ? No, just draw rects
         
         # Top
         painter.fillRect(QRectF(0, 0, w, y), self.dim_color)
