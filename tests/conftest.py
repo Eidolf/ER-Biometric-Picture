@@ -3,7 +3,6 @@ import pytest
 import numpy as np
 
 @pytest.fixture
-@pytest.fixture
 def mock_config():
     return {
         'biometrics': {
