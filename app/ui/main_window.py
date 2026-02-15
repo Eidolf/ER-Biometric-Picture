@@ -72,6 +72,7 @@ class MainWindow(QMainWindow):
         
         self.result_widget = ResultWidget()
         self.result_widget.btn_export.clicked.connect(self.export_results)
+        self.result_widget.btn_export_exact.clicked.connect(self.export_exact_results)
         
         # Connect Optimization Buttons
         self.result_widget.btn_brighten.clicked.connect(lambda: self.adjust_brightness(1.1))
@@ -88,10 +89,19 @@ class MainWindow(QMainWindow):
         
         self.review_layout.addWidget(self.result_widget, 1)
         
-        # Back button
-        self.btn_back = QPushButton("Back to Camera")
+        # Navigation Buttons
+        nav_layout = QHBoxLayout()
+        
+        self.btn_load = QPushButton("📂 Upload New")
+        self.btn_load.setToolTip("Open a new image file")
+        self.btn_load.clicked.connect(self.load_new_file)
+        nav_layout.addWidget(self.btn_load)
+        
+        self.btn_back = QPushButton("📷 Back to Camera")
         self.btn_back.clicked.connect(self.reset_to_camera)
-        self.review_layout.addWidget(self.btn_back)
+        nav_layout.addWidget(self.btn_back)
+        
+        self.review_layout.addLayout(nav_layout)
         
         self.stack.addWidget(self.review_container)
         
@@ -170,6 +180,7 @@ class MainWindow(QMainWindow):
             
             # Disable other buttons?
             self.result_widget.btn_export.setEnabled(False)
+            self.result_widget.btn_export_exact.setEnabled(False)
             # self.result_widget.btn_optimize.setEnabled(False) 
             self.result_widget.btn_fix_bg.setEnabled(False)
             self.result_widget.btn_darken.setEnabled(False)
@@ -184,6 +195,7 @@ class MainWindow(QMainWindow):
             
             self.result_widget.zoom_group.hide()
             self.result_widget.btn_export.setEnabled(True)
+            self.result_widget.btn_export_exact.setEnabled(True)
             # self.result_widget.btn_optimize.setEnabled(True)
             self.result_widget.btn_fix_bg.setEnabled(True)
             self.result_widget.btn_darken.setEnabled(True)
@@ -294,3 +306,22 @@ class MainWindow(QMainWindow):
                  QMessageBox.warning(self, "Export Partial", f"Saved report but could not crop image: {res.get('msg')}")
         else:
              QMessageBox.warning(self, "Export Failed", "No analyis data to export.")
+
+    def load_new_file(self):
+        from PySide6.QtWidgets import QFileDialog
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Images (*.png *.jpg *.jpeg *.bmp)")
+        if file_name:
+            import cv2
+            img = cv2.imread(file_name)
+            if img is not None:
+                self.on_image_captured(img)
+            else:
+                QMessageBox.warning(self, "Error", "Could not load image.")
+
+    def export_exact_results(self):
+        if self.current_image is not None and self.current_report is not None:
+             res = self.exporter.save_exact_image(self.current_image, self.current_report)
+             if 'image_path' in res:
+                 QMessageBox.information(self, "Exact Export Successful", f"Saved EXACT preview to {res['image_path']}")
+        else:
+             QMessageBox.warning(self, "Export Failed", "No image to export.")

@@ -59,6 +59,11 @@ class ResultWidget(QWidget):
         self.btn_export.setStyleSheet("height: 40px; font-weight: bold; font-size: 14px;")
         self.layout.addWidget(self.btn_export)
         
+        # Save Exact (Raw) Button
+        self.btn_export_exact = QPushButton("💾 Save Exact Preview")
+        self.btn_export_exact.setToolTip("Save the image exactly as displayed now (no auto-crop)")
+        self.layout.addWidget(self.btn_export_exact)
+        
         # Crop Button
         self.btn_crop = QPushButton("✂️ Adjust Crop")
         self.btn_crop.setCheckable(True)
