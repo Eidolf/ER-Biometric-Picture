@@ -289,7 +289,19 @@ class MainWindow(QMainWindow):
                 import cv2
                 box = face_to_draw.bbox.astype(int)
                 img_copy = self.current_image.copy()
+                
+                # Green Box = Detected Face
                 cv2.rectangle(img_copy, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+                
+                # Label
+                label_text = "Detected Face"
+                (w, h), _ = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+                # Background strip
+                cv2.rectangle(img_copy, (box[0], box[1] - 25), (box[0] + w + 10, box[1]), (0, 255, 0), -1)
+                # Text
+                cv2.putText(img_copy, label_text, (box[0] + 5, box[1] - 5), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2) # Black text
+
                 # Draw landmarks
                 if face_to_draw.kps is not None:
                     for p in face_to_draw.kps:

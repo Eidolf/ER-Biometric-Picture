@@ -126,16 +126,37 @@ class InteractiveCropper(QWidget):
         # Eye Top (from top) = 45 - 29.7 = 15.3 mm
         # Eye Bottom (from top) = 45 - 21.8 = 23.2 mm
         
+        # Draw Guides (Eye Zone)
+        # 35x45mm. Eye zone 21.8 - 29.7mm from bottom.
         mm_h = box_h / 45.0
-        eye_top_y = y + 15.3 * mm_h
-        eye_bottom_y = y + 23.2 * mm_h
+        eye_top_y = y + (45.0 - 29.7) * mm_h
+        eye_bottom_y = y + (45.0 - 21.8) * mm_h
         
-        painter.setPen(QPen(QColor(0, 255, 0, 100), 1, Qt.DashLine))
+        # Eye Zone
+        painter.setPen(QPen(QColor(0, 255, 0, 150), 1, Qt.DashLine))
         painter.drawLine(x, eye_top_y, x + box_w, eye_top_y)
+        painter.drawText(x + 5, eye_top_y - 2, "Eye Max")
+        
         painter.drawLine(x, eye_bottom_y, x + box_w, eye_bottom_y)
+        painter.drawText(x + 5, eye_bottom_y + 12, "Eye Min")
+        
+        # Face Height Guides (Concentric Ovals)
+        # Max Face (36mm) - RED
+        max_fh_pix = 36.0 * mm_h
+        max_fw_pix = max_fh_pix * 0.75
+        painter.setPen(QPen(QColor(255, 0, 0, 180), 2))
+        painter.drawEllipse(QPointF(cx, cy), max_fw_pix/2, max_fh_pix/2)
+        painter.drawText(cx + max_fw_pix/2 + 2, cy, "Max")
+        
+        # Min Face (30mm) - YELLOW
+        min_fh_pix = 30.0 * mm_h
+        min_fw_pix = min_fh_pix * 0.75
+        painter.setPen(QPen(QColor(255, 255, 0, 180), 2)) 
+        painter.drawEllipse(QPointF(cx, cy), min_fw_pix/2, min_fh_pix/2)
+        painter.drawText(cx + min_fw_pix/2 + 2, cy + 15, "Min")
         
         # Center Line
-        painter.setPen(QPen(QColor(255, 255, 0, 100), 1, Qt.DashLine))
+        painter.setPen(QPen(QColor(255, 255, 255, 50), 1, Qt.DashLine))
         painter.drawLine(cx, y, cx, y + box_h)
         
         # Oval hint
