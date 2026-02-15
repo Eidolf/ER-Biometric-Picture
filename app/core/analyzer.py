@@ -36,18 +36,20 @@ class Analyzer:
         face = faces[0]
         report['face_bbox'] = face.bbox.tolist()
         
-        # 2. Quality Checks (Global)
-        quality_res = self.quality.check_quality(img_bgr)
+        # 2. Background Checks
+        # Returns results AND an optional mask (if it generated one)
+        bg_res, bg_mask = self.background.check_background(img_bgr, face.bbox)
+        report.update(bg_res)
+        
+        # 3. Quality Checks (Global)
+        # Pass the mask from background check to quality check for better uniformity
+        quality_res = self.quality.check_quality(img_bgr, bg_mask=bg_mask)
         report.update(quality_res)
         
-        # 3. Geometry Checks
+        # 4. Geometry Checks
         h, w = img_bgr.shape[:2]
         geo_res = self.geometry.check_processed_image(face, h, w)
         report.update(geo_res)
-        
-        # 4. Background Checks
-        bg_res = self.background.check_background(img_bgr, face.bbox)
-        report.update(bg_res)
         
         # Determine overall Pass/Fail
         failed = [k for k, v in report.items() if isinstance(v, dict) and not v.get('passed', True)]

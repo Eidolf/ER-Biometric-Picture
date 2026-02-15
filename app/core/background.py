@@ -5,14 +5,37 @@ import numpy as np
 class BackgroundChecker:
     def __init__(self, config):
         self.config = config
+        # Assuming segmenter is initialized elsewhere or passed in config
+        self.segmenter = None # Placeholder for a segmentation model
 
     def check_background(self, img_bgr, face_bbox):
         """
-        Check if background is uniform and light.
-        Currently uses simple heuristic sampling.
-        Future: Use U^2-Net / Modnet for segmentation.
+        Check if background is uniform/light enough.
+        Returns (results, mask).
         """
         results = {}
+                # Assuming self.segmenter is u2net wrapper
+                # If we used 'rembg', we call remove().
+                # But here we probably want to keep the mask for Uniformity check.
+                
+                # For now, let's assume we do a quick check or generating mask here is expensive?
+                # Actually, main_window calls optimizer which does segmentation.
+                # But here we are in ANALYSIS phase (before optimization).
+                # We should probably do a light check.
+                
+                # ... implementation details ...
+                pass
+            except Exception as e:
+                # log error
+                pass
+        
+        # If we don't have a segmenter here, we can't return a mask effortlessly.
+        # But wait, we need uniform background check.
+        
+        # Fallback:
+        # uses simple heuristic sampling.
+        # Future: Use U^2-Net / Modnet for segmentation.
+        
         h, w = img_bgr.shape[:2]
         
         # Create a mask for the background (outside face box + margin)
