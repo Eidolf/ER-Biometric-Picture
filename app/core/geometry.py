@@ -42,15 +42,16 @@ class GeometryChecker:
         face_h_px = face.bbox[3] - face.bbox[1]
         face_h_mm = face_h_px * px_to_mm
         
-        min_h = self.biometrics.get('min_face_height_mm', 32)
-        max_h = self.biometrics.get('max_face_height_mm', 36)
+        # Use new keys matching config.yaml
+        min_h = self.biometrics.get('face_height_min_mm', 30.0) 
+        max_h = self.biometrics.get('face_height_max_mm', 36.0)
         
         # BMI Step 2: Face Size
         if min_h <= face_h_mm <= max_h:
-            results['face_height'] = {'passed': True, 'value': f"{face_h_mm:.1f}mm", 'msg': "OK (32-36mm)"}
+            results['face_height'] = {'passed': True, 'value': f"{face_h_mm:.1f}mm", 'msg': f"OK ({min_h}-{max_h}mm)"}
         else:
             results['face_height'] = {'passed': False, 'value': f"{face_h_mm:.1f}mm", 
-                                      'msg': f"Bio-Face height must be 32-36mm"}
+                                      'msg': f"Height must be {min_h}-{max_h}mm"}
 
         # 2. Eye Position (Step 1: Augenbereich)
         # Eyes must be in gray area.

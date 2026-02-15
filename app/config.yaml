@@ -15,7 +15,8 @@ biometrics:
   # Many validators prefer slightly smaller faces ~31mm.
   face_height_min_mm: 30.0  
   face_height_max_mm: 33.0  # Reduced max to avoid "too close" errors.
-  eye_zone_bottom_mm: 21.8 
+  eye_zone_bottom_mm: 21.8 # Used as min_eye_y in code? No code uses min_eye_y_from_bottom_mm default 21.8
+  min_eye_y_from_bottom_mm: 21.8 # Added for safety to match geometry.py default fallback lookup
   max_eye_y_from_bottom_mm: 29.7
   
   # Center deviation (Nose)
