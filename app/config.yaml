@@ -21,12 +21,13 @@ biometrics:
   
   # Center deviation (Nose)
   max_center_deviation_mm: 2.5  # Horizontal offset allowed
-  # Uniformity
-  # If bg_mask is provided, acts on background pixels.
-  # Otherwise acts on edges/corners.
-  uniformity_min_score: 75.0 # Lowered to Accept slight shadows (User had 80.4)
+  # Center deviation (Nose)
+  max_center_deviation_mm: 2.5  # Horizontal offset allowed
 
 thresholds:
+  # Uniformity moved here for clarity
+  uniformity_min_score: 75.0 
+
   blur_min_score: 100.0       # Laplacain variance
   exposure_min_hist: 0.2      # Simple heuristic
   shadow_max_difference: 30   # Pixel diff

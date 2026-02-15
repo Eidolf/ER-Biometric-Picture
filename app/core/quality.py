@@ -82,6 +82,6 @@ class QualityChecker:
             results['uniformity'] = {'passed': True, 'value': f"{score:.1f}", 'msg': f"Uniform (>={threshold})"}
         else:
             results['uniformity'] = {'passed': False, 'value': f"{score:.1f}", 
-                                     'msg': f"Uneven background (StdDev: {std_val:.1f})"}
+                                     'msg': f"Uneven (Score {score:.1f} < {threshold})"}
 
         return results
