@@ -143,6 +143,13 @@ class MainWindow(QMainWindow):
                 self.show_image_in_label(img_copy, self.preview_label)
 
     def toggle_crop_mode(self, checked):
+        if self.current_image is None:
+            if checked:
+                # Reset button state if no image
+                self.result_widget.btn_crop.setChecked(False)
+                QMessageBox.warning(self, "No Image", "Please capture or load an image first.")
+            return
+
         if checked:
             # Enter Crop Mode
             self.cropper.set_image(self.current_image)
