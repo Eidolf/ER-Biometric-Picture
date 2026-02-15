@@ -67,4 +67,4 @@ If `pip install` fails with `Microsoft Visual C++ 14.0 or greater is required`, 
 This application provides a **pre-assessment** only. The final decision on passport photo acceptance lies with the issuing authority. For German ID cards (since May 2025), purely digital submission paths may be required.
 
 ## License
-MIT
+AGPL-3.0

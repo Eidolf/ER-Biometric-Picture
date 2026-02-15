@@ -7,7 +7,7 @@ class QualityChecker:
         self.config = config
         self.thresholds = config.get('thresholds', {})
 
-    def check_quality(self, img_bgr):
+    def check_quality(self, img_bgr, bg_mask=None):
         """
         Check technical quality of the image.
         """
@@ -51,8 +51,22 @@ class QualityChecker:
         # 4. Illumination / Shadows
         # Split image into left and right halves (approx) to check symmetry
         # 1. Calc std dev of background pixels
-        mean, stddev = cv2.meanStdDev(gray, mask=bg_mask_binary)
-        std_val = stddev[0][0]
+        if bg_mask is not None:
+             # Ensure mask is binary single channel
+             if len(bg_mask.shape) > 2:
+                 bg_mask = cv2.cvtColor(bg_mask, cv2.COLOR_BGR2GRAY)
+             
+             mean, stddev = cv2.meanStdDev(gray, mask=bg_mask)
+             std_val = stddev[0][0]
+        else:
+             # Fallback: Check corners
+             h, w = gray.shape
+             adhoc_mask = np.zeros_like(gray)
+             # Top 15%
+             cv2.rectangle(adhoc_mask, (0,0), (w, int(h*0.15)), 255, -1)
+             
+             mean, stddev = cv2.meanStdDev(gray, mask=adhoc_mask)
+             std_val = stddev[0][0]
         
         # Score: 100 - std_val
         # User reported ~80.39 -> StdDev ~19.6
