@@ -38,7 +38,7 @@ class BackgroundChecker:
         bg_pixels = img_bgr[mask == 255]
         
         if len(bg_pixels) == 0:
-            return {'background': {'passed': False, 'msg': "Face covers entire image"}}
+            return {'background': {'passed': False, 'msg': "Face covers entire image"}}, mask
             
         std_dev = np.std(bg_pixels, axis=0) # Per channel std
         mean_val = np.mean(bg_pixels, axis=0)
@@ -66,4 +66,4 @@ class BackgroundChecker:
         else:
              results['brightness'] = {'passed': True, 'value': round(brightness, 2), 'msg': "OK"}
              
-        return results
+        return results, mask
