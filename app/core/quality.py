@@ -73,10 +73,13 @@ class QualityChecker:
         # Slight shadows/gradients cause this.
         score = max(0, 100 - std_val)
         
-        threshold = self.config.get('thresholds', {}).get('uniformity_min_score', 75.0)
+        # Check thresholds first, then biometrics, then default
+        threshold = self.config.get('thresholds', {}).get('uniformity_min_score')
+        if threshold is None:
+             threshold = self.config.get('biometrics', {}).get('uniformity_min_score', 75.0)
         
         if score >= threshold:
-            results['uniformity'] = {'passed': True, 'value': f"{score:.1f}", 'msg': "Uniform"}
+            results['uniformity'] = {'passed': True, 'value': f"{score:.1f}", 'msg': f"Uniform (>={threshold})"}
         else:
             results['uniformity'] = {'passed': False, 'value': f"{score:.1f}", 
                                      'msg': f"Uneven background (StdDev: {std_val:.1f})"}
