@@ -74,11 +74,26 @@ class ResultWidget(QWidget):
         self.zoom_group = QWidget()
         zoom_layout = QHBoxLayout(self.zoom_group)
         zoom_layout.setContentsMargins(0, 5, 0, 5)
+        
         zoom_layout.addWidget(QLabel("Zoom:"))
+        
+        self.btn_zoom_out = QPushButton("➖")
+        self.btn_zoom_out.setFixedWidth(30)
+        zoom_layout.addWidget(self.btn_zoom_out)
+        
         self.slider_zoom = QSlider(Qt.Horizontal)
         self.slider_zoom.setRange(10, 400) # 10% to 400%
         self.slider_zoom.setValue(100)
         zoom_layout.addWidget(self.slider_zoom)
+
+        self.btn_zoom_in = QPushButton("➕")
+        self.btn_zoom_in.setFixedWidth(30)
+        zoom_layout.addWidget(self.btn_zoom_in)
+        
+        self.lbl_zoom_val = QLabel("100%")
+        self.lbl_zoom_val.setFixedWidth(40)
+        zoom_layout.addWidget(self.lbl_zoom_val)
+        
         self.layout.addWidget(self.zoom_group)
         self.zoom_group.hide()
 

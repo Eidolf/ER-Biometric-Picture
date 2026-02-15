@@ -155,6 +155,15 @@ class InteractiveCropper(QWidget):
         painter.drawEllipse(QPointF(cx, cy), min_fw_pix/2, min_fh_pix/2)
         painter.drawText(cx + min_fw_pix/2 + 2, cy + 15, "Min")
         
+        # Chin Guide Labels
+        chin_max_y = cy + max_fh_pix/2
+        painter.setPen(QPen(QColor(255, 0, 0, 200), 1))
+        painter.drawText(cx - 40, chin_max_y + 12, "Chin Max")
+        
+        chin_min_y = cy + min_fh_pix/2
+        painter.setPen(QPen(QColor(255, 255, 0, 200), 1))
+        painter.drawText(cx - 40, chin_min_y - 2, "Chin Min")
+        
         # Center Line
         painter.setPen(QPen(QColor(255, 255, 255, 50), 1, Qt.DashLine))
         painter.drawLine(cx, y, cx, y + box_h)

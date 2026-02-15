@@ -83,6 +83,8 @@ class MainWindow(QMainWindow):
         # Connect Crop Button
         self.result_widget.btn_crop.clicked.connect(self.toggle_crop_mode)
         self.result_widget.slider_zoom.valueChanged.connect(self.on_zoom_slider)
+        self.result_widget.btn_zoom_in.clicked.connect(lambda: self.step_zoom(5))
+        self.result_widget.btn_zoom_out.clicked.connect(lambda: self.step_zoom(-5))
         
         # Connect Cropper Callback
         self.cropper.zoom_changed_callback = self.update_zoom_slider
@@ -156,13 +158,19 @@ class MainWindow(QMainWindow):
                         
                 self.show_image_in_label(img_copy, self.preview_label)
 
+    def step_zoom(self, delta):
+        val = self.result_widget.slider_zoom.value()
+        self.result_widget.slider_zoom.setValue(val + delta)
+
     def on_zoom_slider(self, val):
         self.cropper.set_zoom(val)
+        self.result_widget.lbl_zoom_val.setText(f"{val}%")
         
     def update_zoom_slider(self, val):
         self.result_widget.slider_zoom.blockSignals(True)
         self.result_widget.slider_zoom.setValue(val)
         self.result_widget.slider_zoom.blockSignals(False)
+        self.result_widget.lbl_zoom_val.setText(f"{val}%")
 
     def toggle_crop_mode(self, checked):
         if self.current_image is None:
