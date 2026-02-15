@@ -107,8 +107,10 @@ class ImageOptimizer:
         kernel = np.ones((kernel_size, kernel_size), np.uint8)
         mask2 = cv2.morphologyEx(mask2, cv2.MORPH_CLOSE, kernel)
         
-        # 6. Apply White Background
-        white_bg = np.ones_like(img, dtype=np.uint8) * 255
+        # 6. Apply White Background (Light Gray)
+        # BMI recommends neutral light background (gray is often better than pure white for contrast)
+        # Using (220, 220, 220) - Distinctly light gray
+        white_bg = np.ones_like(img, dtype=np.uint8) * 220
         img_fg = img * mask2[:, :, np.newaxis]
         bg_part = white_bg * (1 - mask2[:, :, np.newaxis])
         

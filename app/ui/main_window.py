@@ -81,6 +81,10 @@ class MainWindow(QMainWindow):
         
         # Connect Crop Button
         self.result_widget.btn_crop.clicked.connect(self.toggle_crop_mode)
+        self.result_widget.slider_zoom.valueChanged.connect(self.on_zoom_slider)
+        
+        # Connect Cropper Callback
+        self.cropper.zoom_changed_callback = self.update_zoom_slider
         
         self.review_layout.addWidget(self.result_widget, 1)
         
@@ -142,6 +146,14 @@ class MainWindow(QMainWindow):
                         
                 self.show_image_in_label(img_copy, self.preview_label)
 
+    def on_zoom_slider(self, val):
+        self.cropper.set_zoom(val)
+        
+    def update_zoom_slider(self, val):
+        self.result_widget.slider_zoom.blockSignals(True)
+        self.result_widget.slider_zoom.setValue(val)
+        self.result_widget.slider_zoom.blockSignals(False)
+
     def toggle_crop_mode(self, checked):
         if self.current_image is None:
             if checked:
@@ -163,12 +175,14 @@ class MainWindow(QMainWindow):
             self.result_widget.btn_darken.setEnabled(False)
             self.result_widget.btn_brighten.setEnabled(False)
             self.result_widget.btn_undo.setEnabled(False)
+            self.result_widget.zoom_group.show()
         else:
             # Apply Crop
             self.apply_crop()
             self.review_stack.setCurrentWidget(self.preview_label)
             self.result_widget.btn_crop.setText("✂️ Adjust Crop")
             
+            self.result_widget.zoom_group.hide()
             self.result_widget.btn_export.setEnabled(True)
             # self.result_widget.btn_optimize.setEnabled(True)
             self.result_widget.btn_fix_bg.setEnabled(True)

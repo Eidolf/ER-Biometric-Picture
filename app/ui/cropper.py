@@ -11,8 +11,11 @@ class InteractiveCropper(QWidget):
         
         # Transform state
         self.scale = 1.0
+        # Transform state
+        self.scale = 1.0
         self.offset_x = 0.0
         self.offset_y = 0.0
+        self.zoom_changed_callback = None
         
         # Interaction state
         self.last_mouse_pos = QPointF()
@@ -58,6 +61,8 @@ class InteractiveCropper(QWidget):
         
         self.offset_x = (w - img_w * self.scale) / 2
         self.offset_y = (h - img_h * self.scale) / 2
+        
+        self.update_zoom_callback()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -145,6 +150,32 @@ class InteractiveCropper(QWidget):
             self.is_panning = True
             self.last_mouse_pos = event.globalPosition()
             
+    def set_zoom(self, zoom_pct):
+        # Set absolute zoom (factor)
+        new_scale = zoom_pct / 100.0
+        if abs(new_scale - self.scale) < 0.01: return
+        
+        # Center zoom logic
+        w = self.width()
+        h = self.height()
+        cx = w / 2
+        cy = h / 2
+        
+        if self.scale > 0:
+             ix = (cx - self.offset_x) / self.scale
+             iy = (cy - self.offset_y) / self.scale
+             
+             self.offset_x = cx - ix * new_scale
+             self.offset_y = cy - iy * new_scale
+        
+        self.scale = new_scale
+        self.update()
+
+    def update_zoom_callback(self):
+         if self.zoom_changed_callback:
+             pct = int(self.scale * 100)
+             self.zoom_changed_callback(pct)
+
     def mouseMoveEvent(self, event):
         if self.is_panning:
             delta = event.globalPosition() - self.last_mouse_pos
@@ -194,6 +225,7 @@ class InteractiveCropper(QWidget):
         self.offset_y = cy - vy
         
         self.scale = new_scale
+        self.update_zoom_callback()
         self.update()
 
     def get_current_crop(self):

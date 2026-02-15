@@ -1,5 +1,5 @@
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QLabel, QPushButton, QHBoxLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QLabel, QPushButton, QHBoxLayout, QSlider
 from PySide6.QtCore import Qt
 
 class ResultWidget(QWidget):
@@ -64,6 +64,18 @@ class ResultWidget(QWidget):
         self.btn_crop.setCheckable(True)
         self.btn_crop.setStyleSheet("height: 30px; font-weight: bold; margin-top: 5px;")
         self.layout.addWidget(self.btn_crop)
+        
+        # Zoom Controls (Hidden by default, shown in Crop Mode)
+        self.zoom_group = QWidget()
+        zoom_layout = QHBoxLayout(self.zoom_group)
+        zoom_layout.setContentsMargins(0, 5, 0, 5)
+        zoom_layout.addWidget(QLabel("Zoom:"))
+        self.slider_zoom = QSlider(Qt.Horizontal)
+        self.slider_zoom.setRange(10, 400) # 10% to 400%
+        self.slider_zoom.setValue(100)
+        zoom_layout.addWidget(self.slider_zoom)
+        self.layout.addWidget(self.zoom_group)
+        self.zoom_group.hide()
 
     def update_results(self, results):
         self.tree.clear()
