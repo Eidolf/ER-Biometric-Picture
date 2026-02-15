@@ -78,6 +78,9 @@ class QualityChecker:
         if threshold is None:
              threshold = self.config.get('biometrics', {}).get('uniformity_min_score', 75.0)
         
+        # DEBUG PRINT
+        print(f"DEBUG_UNIFORMITY: Score={score:.2f}, Threshold={threshold}, CONFIG_THRESHOLDS={self.config.get('thresholds')}")
+
         if score >= threshold:
             results['uniformity'] = {'passed': True, 'value': f"{score:.1f}", 'msg': f"Uniform (>={threshold})"}
         else:
