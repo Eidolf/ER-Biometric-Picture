@@ -47,7 +47,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='images/logo.png' # Setup icon if .ico available, else png might fail on Windows
+    icon=None # 'images/logo.png' # Setup icon if .ico available, else png might fail on Windows
 )
 coll = COLLECT(
     exe,
