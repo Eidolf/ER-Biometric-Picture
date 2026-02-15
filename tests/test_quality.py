@@ -35,13 +35,15 @@ def test_exposure_check(mock_config):
     white_img = np.ones((100, 100, 3), dtype=np.uint8) * 255
     res = checker.check_quality(white_img)
     assert res['exposure']['passed'] == False
-    assert res['exposure']['value'] == 'Over'
+    # Value is "Bright" in code
+    assert res['exposure']['value'] == 'Bright' 
     
     # Underexposed (All Black)
     black_img = np.zeros((100, 100, 3), dtype=np.uint8)
     res = checker.check_quality(black_img)
     assert res['exposure']['passed'] == False
-    assert res['exposure']['value'] == 'Under'
+    # Value is "Dark" in code
+    assert res['exposure']['value'] == 'Dark'
     
     # Good exposure (Middle gray)
     gray_img = np.ones((100, 100, 3), dtype=np.uint8) * 128

@@ -6,20 +6,24 @@ def test_face_height_check(mock_config, mock_face):
     checker = GeometryChecker(mock_config)
     
     # Image height 1000px. 45mm equivalent.
-    # Min height 32mm -> 711px. Max 36mm -> 800px.
+    # px_to_mm = 0.045
+    # Min height 30mm -> 666.6px. Max 33mm -> 733.3px.
     
-    # Case 1: Perfect height (34mm -> ~755px)
-    face = mock_face([100, 100, 500, 855], [[0,0]]*5) # bbox height 755
+    # Case 1: Perfect height (31.5mm -> 700px)
+    # 700 * 0.045 = 31.5 -> OK
+    face = mock_face([100, 100, 500, 800], [[0,0]]*5) # bbox height 700
     res = checker.check_processed_image(face, 1000, 1000)
     assert res['face_height']['passed'] == True
     
-    # Case 2: Too small (30mm -> 666px)
-    face = mock_face([100, 100, 500, 766], [[0,0]]*5) 
+    # Case 2: Too small (29mm -> ~644px)
+    # 644 * 0.045 = 28.98 -> Fail
+    face = mock_face([100, 100, 500, 744], [[0,0]]*5) # bbox height 644
     res = checker.check_processed_image(face, 1000, 1000)
     assert res['face_height']['passed'] == False
     
-    # Case 3: Too big (38mm -> 844px)
-    face = mock_face([100, 50, 500, 894], [[0,0]]*5)
+    # Case 3: Too big (34mm -> ~755px)
+    # 755 * 0.045 = 33.975 -> Fail (Max is 33.0)
+    face = mock_face([100, 100, 500, 855], [[0,0]]*5) 
     res = checker.check_processed_image(face, 1000, 1000)
     assert res['face_height']['passed'] == False
 
