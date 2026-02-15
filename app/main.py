@@ -38,12 +38,12 @@ def main():
     # Initialize Window (Models load here)
     window = MainWindow(config)
     
+    window.show()
+    
     # Finish splash
     if splash:
         splash.finish(window)
         
-    window.show()
-    
     sys.exit(app.exec())
 
 if __name__ == "__main__":
