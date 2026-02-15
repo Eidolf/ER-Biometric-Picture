@@ -34,11 +34,17 @@ class Exporter:
             dpi = self.config.get('biometrics', {}).get('resolution_dpi', 600)
             width_mm = self.config.get('biometrics', {}).get('output_width_mm', 35)
             height_mm = self.config.get('biometrics', {}).get('output_height_mm', 45)
-            
+            # 1 inch = 25.4 mm
             target_w = int((width_mm / 25.4) * dpi)
             target_h = int((height_mm / 25.4) * dpi)
             
-            scale = (target_h * 0.75) / face_h
+            # Face height in target:
+            # Standard ICAO: 32-36mm (approx 71-80%)
+            # Optimized Target: 31mm (Safe zone, ~69%)
+            target_face_h_mm = 31.0 
+            target_face_h_pix = (target_face_h_mm / height_mm) * target_h
+            
+            scale = target_face_h_pix / face_h
             
             M = cv2.getRotationMatrix2D((cx, cy), 0, scale)
             M[0, 2] += (target_w / 2) - cx

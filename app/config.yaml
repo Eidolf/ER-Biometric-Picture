@@ -10,8 +10,11 @@ biometrics:
   output_height_mm: 45
   
   # Based on ICAO / BMI geometry
-  face_height_min_mm: 30.0  # Reduced from 32mm based on user feedback
-  face_height_max_mm: 36.0
+  # Standard ICAO: 32-36mm
+  # OPTIMIZED for Acceptance: 30-33mm (Target 31mm)
+  # Many validators prefer slightly smaller faces ~31mm.
+  face_height_min_mm: 30.0  
+  face_height_max_mm: 33.0  # Reduced max to avoid "too close" errors.
   eye_zone_bottom_mm: 21.8 
   max_eye_y_from_bottom_mm: 29.7
   

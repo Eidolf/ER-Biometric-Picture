@@ -83,8 +83,8 @@ class MainWindow(QMainWindow):
         # Connect Crop Button
         self.result_widget.btn_crop.clicked.connect(self.toggle_crop_mode)
         self.result_widget.slider_zoom.valueChanged.connect(self.on_zoom_slider)
-        self.result_widget.btn_zoom_in.clicked.connect(lambda: self.step_zoom(5))
-        self.result_widget.btn_zoom_out.clicked.connect(lambda: self.step_zoom(-5))
+        self.result_widget.btn_zoom_in.clicked.connect(lambda: self.step_zoom(1))
+        self.result_widget.btn_zoom_out.clicked.connect(lambda: self.step_zoom(-1))
         
         # Connect Cropper Callback
         self.cropper.zoom_changed_callback = self.update_zoom_slider

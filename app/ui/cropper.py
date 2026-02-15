@@ -140,25 +140,26 @@ class InteractiveCropper(QWidget):
         painter.drawLine(x, eye_bottom_y, x + box_w, eye_bottom_y)
         painter.drawText(x + 5, eye_bottom_y + 12, "Eye Min")
         
+        
         # Face Height Guides (Concentric Ovals)
-        # Max Face (36mm) - RED
-        max_fh_pix = 36.0 * mm_h
+        # Max Face (Optimized 33mm) - RED
+        max_fh_pix = 33.0 * mm_h # Reduced from 36
         max_fw_pix = max_fh_pix * 0.75
         painter.setPen(QPen(QColor(255, 0, 0, 180), 2))
         painter.drawEllipse(QPointF(cx, cy), max_fw_pix/2, max_fh_pix/2)
-        painter.drawText(cx + max_fw_pix/2 + 2, cy, "Max")
+        painter.drawText(cx + max_fw_pix/2 + 2, cy, "Max (33mm)")
         
         # Min Face (30mm) - YELLOW
         min_fh_pix = 30.0 * mm_h
         min_fw_pix = min_fh_pix * 0.75
         painter.setPen(QPen(QColor(255, 255, 0, 180), 2)) 
         painter.drawEllipse(QPointF(cx, cy), min_fw_pix/2, min_fh_pix/2)
-        painter.drawText(cx + min_fw_pix/2 + 2, cy + 15, "Min")
+        painter.drawText(cx + min_fw_pix/2 + 2, cy + 15, "Min (30mm)")
         
         # Chin Guide Labels
         chin_max_y = cy + max_fh_pix/2
         painter.setPen(QPen(QColor(255, 0, 0, 200), 1))
-        painter.drawText(cx - 40, chin_max_y + 12, "Chin Max")
+        painter.drawText(cx - 50, chin_max_y + 12, "Chin Max")
         
         chin_min_y = cy + min_fh_pix/2
         painter.setPen(QPen(QColor(255, 255, 0, 200), 1))
