@@ -13,19 +13,12 @@ on:
         - patch
         - minor
         - major
-  push:
-    branches: [ "main" ]
-    tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
-  pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: write
 
 jobs:
   bump-version:
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,12 +78,7 @@ jobs:
 
   build:
     name: Build on ${{ matrix.os }}
-    # Run after bump-version if it ran. 
-    # If bump-version was skipped (e.g. push event), run immediately.
     needs: bump-version
-    if: |
-      always() && 
-      (needs.bump-version.result == 'success' || needs.bump-version.result == 'skipped')
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
