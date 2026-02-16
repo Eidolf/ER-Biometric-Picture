@@ -176,3 +176,12 @@ jobs:
       with:
         name: PassPhotoCheck-Windows
         path: dist/PassPhotoCheck-Windows.zip
+        
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: env.RELEASE_TAG != ''
+      with:
+        tag_name: ${{ env.RELEASE_TAG }}
+        files: |
+          dist/PassPhotoCheck-Linux.tar.gz
+          dist/PassPhotoCheck-Windows.zip
