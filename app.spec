@@ -7,19 +7,24 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 block_cipher = None
 
 # Collect InsightFace and OnnxRuntime dependencies if needed
+# Collect InsightFace and OnnxRuntime dependencies if needed
 datas = []
 datas += collect_data_files('insightface')
 datas += collect_data_files('onnxruntime')
+
+# Explicitly collect 'app' package ensuring all submodules are found
+# This handles "ModuleNotFoundError: No module named 'app.ui'"
+hidden_app = collect_submodules('app')
 
 # Add config.yaml
 datas += [('app/config.yaml', 'app'), ('images/logo.png', 'images')]
 
 a = Analysis(
     ['app/main.py'],
-    pathex=[],
+    pathex=['.'], # Ensure root is in path so 'app' module is resolved
     binaries=[],
     datas=datas,
-    hiddenimports=['sklearn.utils._typedefs', 'sklearn.neighbors._partition_nodes', 'scipy.special.cython_special'],
+    hiddenimports=['sklearn.utils._typedefs', 'sklearn.neighbors._partition_nodes', 'scipy.special.cython_special'] + hidden_app,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

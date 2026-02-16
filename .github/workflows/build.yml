@@ -1,15 +1,92 @@
 
-name: Build Portable Apps
+name: Build and Release
 
 on:
   workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version Bump Type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
   push:
     branches: [ "main" ]
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: write
+
 jobs:
+  bump-version:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bump Version
+        id: bump
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # Read current version
+          current_version=$(grep "version:" app/config.yaml | awk '{print $2}' | tr -d '"')
+          echo "Current version: $current_version"
+          
+          # Split version
+          IFS='.' read -r -a parts <<< "$current_version"
+          major="${parts[0]}"
+          minor="${parts[1]}"
+          patch="${parts[2]}"
+          
+          bump_type="${{ inputs.bump }}"
+          
+          if [ "$bump_type" == "major" ]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [ "$bump_type" == "minor" ]; then
+            minor=$((minor + 1))
+            patch=0
+          else
+            patch=$((patch + 1))
+          fi
+          
+          new_version="$major.$minor.$patch"
+          echo "New version: $new_version"
+          
+          # Update config.yaml
+          sed -i "s/version: \"$current_version\"/version: \"$new_version\"/" app/config.yaml
+          
+          # Commit and Push
+          git add app/config.yaml
+          git commit -m "Bump version to v$new_version"
+          git push
+          
+          # Tag
+          git tag "v$new_version"
+          git push origin "v$new_version"
+          
+          echo "Triggered release for v$new_version"
+
   build:
+    # Run build only on push/pull_request/tag events (not on the manual bump trigger itself)
+    # The manual bump trigger pushes a tag, which STARTS a new workflow run for the build.
+    if: github.event_name != 'workflow_dispatch'
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
