@@ -7,6 +7,13 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt
 from app.ui.main_window import MainWindow
 
+# Redirect stdout/stderr to avoid crashes in no-console mode (Windows)
+# This prevents "NoneType object has no attribute write" errors from libraries
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w")
+
 def load_config(config_path="app/config.yaml"):
     if not os.path.exists(config_path):
         return {}

@@ -84,10 +84,13 @@ jobs:
           echo "Triggered release for v$new_version"
 
   build:
-    # Run build only on push/pull_request/tag events (not on the manual bump trigger itself)
-    # The manual bump trigger pushes a tag, which STARTS a new workflow run for the build.
-    if: github.event_name != 'workflow_dispatch'
     name: Build on ${{ matrix.os }}
+    # Run after bump-version if it ran. 
+    # If bump-version was skipped (e.g. push event), run immediately.
+    needs: bump-version
+    if: |
+      always() && 
+      (needs.bump-version.result == 'success' || needs.bump-version.result == 'skipped')
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -96,6 +99,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Needed to see new tags
+        
+    - name: Checkout latest tag if bumped
+      if: needs.bump-version.result == 'success'
+      shell: bash
+      run: |
+        git fetch --tags
+        latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+        echo "Checking out $latest_tag"
+        git checkout $latest_tag
     
     - name: Set up Python 3.11
       uses: actions/setup-python@v5
