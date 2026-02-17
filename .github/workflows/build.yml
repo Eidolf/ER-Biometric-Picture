@@ -20,6 +20,8 @@ permissions:
 jobs:
   bump-version:
     runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -71,10 +73,12 @@ jobs:
           git push
           
           # Tag
-          git tag "v$new_version"
-          git push origin "v$new_version"
+          new_tag="v$new_version"
+          git tag "$new_tag"
+          git push origin "$new_tag"
           
-          echo "Triggered release for v$new_version"
+          echo "Triggered release for $new_tag"
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
 
   build:
     name: Build on ${{ matrix.os }}
@@ -88,24 +92,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Needed to see new tags
+        ref: ${{ needs.bump-version.outputs.new_tag }}
         
-    - name: Checkout latest tag if bumped
-      if: needs.bump-version.result == 'success'
-      shell: bash
-      run: |
-        git fetch --tags
-        latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-        echo "Checking out $latest_tag"
-        git checkout $latest_tag
-        echo "RELEASE_TAG=$latest_tag" >> $GITHUB_ENV
-    
-    - name: Set Release Tag (Tag Trigger)
-      if: startsWith(github.ref, 'refs/tags/')
-      shell: bash
-      run: |
-        echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-    
     - name: Set up Python 3.11
       uses: actions/setup-python@v5
       with:
@@ -165,11 +153,25 @@ jobs:
         name: PassPhotoCheck-Windows
         path: dist/PassPhotoCheck-Windows.zip
         
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      if: env.RELEASE_TAG != ''
-      with:
-        tag_name: ${{ env.RELEASE_TAG }}
-        files: |
-          dist/PassPhotoCheck-Linux.tar.gz
-          dist/PassPhotoCheck-Windows.zip
+  publish:
+    needs: [bump-version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+          
+      - name: Display Downloaded Files
+        run: ls -R dist
+        
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.bump-version.outputs.new_tag }}
+          files: |
+            dist/PassPhotoCheck-Linux.tar.gz
+            dist/PassPhotoCheck-Windows.zip
