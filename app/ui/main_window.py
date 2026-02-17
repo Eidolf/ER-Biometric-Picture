@@ -1,13 +1,23 @@
 
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QStackedWidget, QPushButton, QMessageBox, QLabel
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QStackedWidget, QPushButton, QMessageBox, QLabel, QProgressDialog
+from PySide6.QtCore import Qt, QTimer, QThread
 from PySide6.QtGui import QIcon, QPixmap
 
 from app.ui.camera_widget import CameraWidget
 from app.ui.overlay_widget import OverlayWidget
 from app.ui.result_widget import ResultWidget
-from app.core.analyzer import Analyzer
+# Analyzer imported lazily in workers or later
 from app.core.optimizer import ImageOptimizer
+from app.utils.export import Exporter
+from app.ui.cropper import InteractiveCropper
+from app.ui.workers import InitWorker, AnalysisWorker
+
+class MainWindow(QMainWindow):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.analyzer = None 
+        self.optimizer = ImageOptimizer(config)
 from app.utils.export import Exporter
 from app.ui.cropper import InteractiveCropper
 
@@ -107,12 +117,38 @@ class MainWindow(QMainWindow):
         
         self.stack.addWidget(self.review_container)
         
-        # Initialize Analyzer
-        # TODO: Move to thread to avoid freezing startup
-        self.init_analyzer()
+        # Initialize Analyzer in Background
+        self.start_init_thread()
         
         # Show Disclaimer
         QTimer.singleShot(100, self.show_disclaimer)
+
+    def start_init_thread(self):
+        # Create Thread
+        self.init_thread = QThread()
+        self.init_worker = InitWorker(self)
+        self.init_worker.moveToThread(self.init_thread)
+        
+        # Connect signals
+        self.init_thread.started.connect(self.init_worker.run)
+        self.init_worker.finished.connect(self.on_init_finished)
+        self.init_worker.finished.connect(self.init_thread.quit)
+        self.init_worker.finished.connect(self.init_worker.deleteLater)
+        self.init_thread.finished.connect(self.init_thread.deleteLater)
+        self.init_worker.error.connect(self.on_init_error)
+        
+        # Start
+        self.init_thread.start()
+        
+        # Show splash/loading status in StatusBar
+        self.statusBar().showMessage("Initializing AI Models... Please wait.")
+
+    def on_init_finished(self):
+        self.statusBar().showMessage("Ready", 5000)
+
+    def on_init_error(self, err):
+        self.statusBar().showMessage(f"Error initializing AI: {err}")
+        QMessageBox.critical(self, "Init Error", f"Failed to initialize AI models: {err}")
 
     def show_disclaimer(self):
         msg = (
@@ -125,38 +161,84 @@ class MainWindow(QMainWindow):
         QMessageBox.warning(self, "Rechtlicher Hinweis (DE)", msg)
 
     def init_analyzer(self):
-        try:
-            self.analyzer = Analyzer(self.config)
-        except Exception as e:
-            QMessageBox.critical(self, "Init Error", f"Failed to initialize AI models: {e}")
-
+        # Legacy method kept for interface safety but unused if threaded
+        pass
+        
     def on_image_captured(self, img_bgr):
         self.current_image = img_bgr
         self.original_capture = img_bgr.copy() # Store original for undo
         self.stack.setCurrentWidget(self.review_container)
         
-        # Show image
+        # Show image immediately
         self.show_image_in_label(img_bgr, self.preview_label)
         
-        # Run Analysis
-        if self.analyzer:
-            report, face = self.analyzer.analyze(img_bgr)
-            self.current_face = face
-            self.current_report = report
-            self.result_widget.update_results(report)
+        if not self.analyzer:
+            QMessageBox.warning(self, "Not Ready", "AI Models are still loading. Please wait a moment.")
+            return
+
+        # Run Analysis in Background
+        self.run_analysis_thread(img_bgr)
+
+    def run_analysis_thread(self, img_bgr):
+        # Show Progress
+        self.progress_dialog = QProgressDialog("Analyzing image...", None, 0, 0, self) # No cancel button
+        self.progress_dialog.setWindowModality(Qt.WindowModal)
+        self.progress_dialog.show()
+        
+        # Create Thread
+        self.analysis_thread = QThread()
+        self.analysis_worker = AnalysisWorker(self.analyzer, img_bgr)
+        self.analysis_worker.moveToThread(self.analysis_thread)
+        
+        # Connect signals
+        self.analysis_thread.started.connect(self.analysis_worker.run)
+        self.analysis_worker.finished.connect(self.on_analysis_finished)
+        self.analysis_worker.finished.connect(self.analysis_thread.quit)
+        self.analysis_worker.finished.connect(self.analysis_worker.deleteLater)
+        self.analysis_thread.finished.connect(self.analysis_thread.deleteLater)
+        self.analysis_worker.error.connect(self.on_analysis_error)
+        
+        # Start
+        self.analysis_thread.start()
+
+    def on_analysis_finished(self, report, face):
+        if self.progress_dialog:
+            self.progress_dialog.close()
             
-            # Draw Face Box on preview for feedback
-            if face:
-                import cv2
-                box = face.bbox.astype(int)
-                img_copy = img_bgr.copy()
-                cv2.rectangle(img_copy, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
-                # Draw landmarks
-                if face.kps is not None:
-                    for p in face.kps:
-                        cv2.circle(img_copy, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
-                        
-                self.show_image_in_label(img_copy, self.preview_label)
+        self.current_face = face
+        self.current_report = report
+        self.result_widget.update_results(report)
+        
+        # Draw Face Box on preview
+        self.draw_face_overlay(face)
+
+    def on_analysis_error(self, err):
+        if self.progress_dialog:
+            self.progress_dialog.close()
+        QMessageBox.critical(self, "Analysis Error", f"An error occurred: {err}")
+
+    def draw_face_overlay(self, face):
+        if not face: return
+        import cv2
+        img_copy = self.current_image.copy()
+        box = face.bbox.astype(int)
+        cv2.rectangle(img_copy, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2)
+        
+        # Label
+        label_text = "Detected Face"
+        (w, h), _ = cv2.getTextSize(label_text, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+        # Background strip
+        cv2.rectangle(img_copy, (box[0], box[1] - 25), (box[0] + w + 10, box[1]), (0, 255, 0), -1)
+        # Text
+        cv2.putText(img_copy, label_text, (box[0] + 5, box[1] - 5), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 2) # Black text
+
+        # Draw landmarks
+        if face.kps is not None:
+            for p in face.kps:
+                cv2.circle(img_copy, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
+                
+        self.show_image_in_label(img_copy, self.preview_label)
 
     def step_zoom(self, delta):
         val = self.result_widget.slider_zoom.value()
