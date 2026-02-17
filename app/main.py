@@ -14,7 +14,26 @@ if sys.stdout is None:
 if sys.stderr is None:
     sys.stderr = open(os.devnull, "w")
 
+def get_resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller OneFile creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        # OneDir or Dev
+        if getattr(sys, 'frozen', False):
+            # OneDir: Resources are in the same dir as executable
+            base_path = os.path.dirname(sys.executable)
+        else:
+            # Dev: Resources are in root, relative to app/main.py
+            # app/main.py -> app/ -> root
+            base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    return os.path.join(base_path, relative_path)
+
 def load_config(config_path="app/config.yaml"):
+    # Fix config path using resource logic
+    config_path = get_resource_path(config_path)
     if not os.path.exists(config_path):
         return {}
     with open(config_path, "r") as f:
@@ -25,11 +44,7 @@ def main():
     app = QApplication(sys.argv)
     
     # Splash Screen
-    # Assume running from root or app folder
-    # Try to find logo
-    base_dir = os.path.dirname(os.path.abspath(__file__)) # app/
-    root_dir = os.path.dirname(base_dir) # root
-    logo_path = os.path.join(root_dir, "images", "logo.png")
+    logo_path = get_resource_path(os.path.join("images", "logo.png"))
     
     splash = None
     if os.path.exists(logo_path):
