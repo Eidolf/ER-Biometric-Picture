@@ -1,7 +1,7 @@
 # PassPhotoCheck Configuration
 app:
   name: "PassPhotoCheck"
-  version: "1.0.3"
+  version: "1.0.4"
   log_level: "INFO"
 
 biometrics:
