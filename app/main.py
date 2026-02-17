@@ -5,7 +5,7 @@ import yaml
 from PySide6.QtWidgets import QApplication, QSplashScreen
 from PySide6.QtGui import QPixmap
 from PySide6.QtCore import Qt
-from app.ui.main_window import MainWindow
+# Moved MainWindow import inside main() for lazy loading/splash screen optimization
 
 # Redirect stdout/stderr to avoid crashes in no-console mode (Windows)
 # This prevents "NoneType object has no attribute write" errors from libraries
@@ -43,6 +43,8 @@ def main():
         app.processEvents()
     
     # Initialize Window (Models load here)
+    # Lazy import to allow Splash Screen to show immediately
+    from app.ui.main_window import MainWindow
     window = MainWindow(config)
     
     window.show()

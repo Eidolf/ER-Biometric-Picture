@@ -83,7 +83,10 @@ class CameraWidget(QWidget):
             ret, frame = self.cap.read()
             if ret:
                 self.current_frame = frame
-                self.display_frame(frame)
+                # Mirror the frame for internal view (like a mirror)
+                # But keep self.current_frame original for capture/analysis
+                preview_frame = cv2.flip(frame, 1)
+                self.display_frame(preview_frame)
 
     def display_frame(self, frame_bgr):
         # Convert BGR to RGB
